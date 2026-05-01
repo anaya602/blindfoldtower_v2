@@ -1,0 +1,29 @@
+{
+  "name": "blindfold-tower-v2",
+  "version": "2.0.0",
+  "description": "Real-time multiplayer blindfolded block-stacking tower game",
+  "main": "server/index.js",
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=9.0.0"
+  },
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "nodemon server/index.js",
+    "test": "node test/multi-client.js"
+  },
+  "dependencies": {
+    "@colyseus/core": "^0.15.20",
+    "@colyseus/monitor": "^0.15.7",
+    "@colyseus/tools": "^0.15.8",
+    "colyseus": "^0.15.20",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "matter-js": "^0.19.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.3"
+  },
+  "keywords": ["multiplayer", "game", "colyseus", "tower", "phaser"],
+  "license": "MIT"
+}

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Blindfold Tower v2</title>
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="stylesheet" href="/style.css" />
+
+  <!-- Colyseus JS client (must load before our game scripts) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/colyseus.js/0.15.16/colyseus.js"
+          integrity="sha512-...skip..." crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <!-- Fallback if CDN SRI fails – load from npm CDN -->
+  <script>
+    if (typeof Colyseus === 'undefined') {
+      document.write('<script src="https://unpkg.com/colyseus.js@0.15.16/dist/colyseus.js"><\/script>');
+    }
+  </script>
+
+  <!-- Phaser 3 (stable release) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.60.0/phaser.min.js"
+          crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+
+  <!-- ── Lobby UI (shown before game starts) ───────────────────────────────── -->
+  <div id="lobby-container">
+    <div id="lobby-panel">
+      <div class="lobby-header">
+        <h1>🗼 Blindfold Tower</h1>
+        <p>Stack blocks… without seeing a thing.</p>
+      </div>
+
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="create">Create</button>
+        <button class="tab-btn"        data-tab="join">Join</button>
+        <button class="tab-btn"        data-tab="reconnect">Reconnect</button>
+      </div>
+
+      <!-- Create room tab -->
+      <div class="tab-content active" id="tab-create">
+        <label for="create-name">Your Name</label>
+        <input type="text" id="create-name" maxlength="20" placeholder="Enter name…" autocomplete="off" />
+        <button class="btn btn-primary" id="btn-create">Create Room</button>
+        <div class="lobby-error" id="create-error"></div>
+      </div>
+
+      <!-- Join room tab -->
+      <div class="tab-content" id="tab-join">
+        <label for="join-name">Your Name</label>
+        <input type="text" id="join-name" maxlength="20" placeholder="Enter name…" autocomplete="off" />
+        <label for="join-room-id">Room ID</label>
+        <input type="text" id="join-room-id" maxlength="12" placeholder="e.g. AbCd1234" autocomplete="off" />
+        <button class="btn btn-primary" id="btn-join">Join Room</button>
+        <div class="lobby-error" id="join-error"></div>
+      </div>
+
+      <!-- Reconnect tab -->
+      <div class="tab-content" id="tab-reconnect">
+        <label for="reconn-session">Session ID</label>
+        <input type="text" id="reconn-session" maxlength="36" placeholder="Paste old session ID…" autocomplete="off" />
+        <label for="reconn-token">Reconnect Token</label>
+        <input type="text" id="reconn-token" maxlength="80" placeholder="Paste reconnect token…" autocomplete="off" />
+        <label for="reconn-room">Room ID</label>
+        <input type="text" id="reconn-room" maxlength="12" placeholder="Room ID…" autocomplete="off" />
+        <button class="btn btn-secondary" id="btn-reconnect">Reconnect</button>
+        <div class="lobby-error" id="reconn-error"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Game UI (shown once in a room) ────────────────────────────────────── -->
+  <div id="game-container" style="display:none;">
+    <!-- Phaser canvas mounts here (via game.js config) -->
+
+    <!-- ── Status / host bar ─── -->
+    <div id="status-bar">
+      <div class="status-left">
+        <span class="round-info" id="round-label">Lobby</span>
+        <span class="phase-badge" id="phase-badge">waiting</span>
+        <span class="height-display" id="height-display"></span>
+      </div>
+      <div class="status-right">
+        <button id="btn-start-round">▶ Start Round</button>
+        <span id="room-id-display" style="color:var(--text2);font-size:0.78rem;"></span>
+      </div>
+    </div>
+
+    <!-- ── Leaderboard ─── -->
+    <div id="leaderboard">
+      <div class="lb-title">Leaderboard</div>
+      <div id="lb-rows"></div>
+    </div>
+
+    <!-- ── Blindfold overlay (covers everything for the blind player) ─── -->
+    <div id="blindfold-overlay">
+      <div class="blind-label">BLINDFOLDED</div>
+      <div class="blind-controls-hint">
+        <span class="key-chip">A/D – move</span>
+        <span class="key-chip">Q/E – rotate</span>
+        <span class="key-chip">SPACE – drop</span>
+      </div>
+    </div>
+
+    <!-- ── Chat panel ─── -->
+    <div id="chat-panel">
+      <div id="chat-messages"></div>
+      <div id="chat-input-row">
+        <input type="text" id="chat-input" maxlength="200" placeholder="Chat…" autocomplete="off" />
+        <button id="chat-send">➤</button>
+      </div>
+    </div>
+
+    <!-- ── Toast container ─── -->
+    <div id="toast-container"></div>
+
+    <!-- ── End-of-round scoreboard overlay ─── -->
+    <div id="scoreboard-overlay">
+      <div class="scoreboard-card">
+        <h2 id="sb-title">Round Over</h2>
+        <div class="round-height"><span id="sb-height">0</span> <span>units tall</span></div>
+        <table class="scoreboard-table">
+          <thead>
+            <tr><th>#</th><th>Player</th><th>Round</th><th>Total</th></tr>
+          </thead>
+          <tbody id="sb-rows"></tbody>
+        </table>
+        <button class="btn btn-primary" id="btn-next-round" style="display:none;">Next Round ▶</button>
+        <p id="sb-wait-msg" style="color:var(--text2);font-size:0.85rem;margin-top:8px;">Waiting for host…</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main game bootstrap (loads Lobby + Game Phaser scenes) -->
+  <script src="/scenes/Lobby.js"></script>
+  <script src="/scenes/Game.js"></script>
+  <script src="/game.js"></script>
+</body>
+</html>
