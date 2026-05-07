@@ -1,11 +1,6 @@
-node_modules/
+node_modules
 .env
-.env.local
-*.log
-npm-debug.log*
-dist/
 .DS_Store
-Thumbs.db
-.vscode/
-.idea/
-coverage/
+*.log
+dist
+.cache

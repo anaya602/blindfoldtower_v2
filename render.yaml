@@ -1,22 +1,10 @@
-# Render.com free-tier deployment config
-# Instructions: Push to GitHub, connect repo on render.com, create a "Web Service"
-# Build Command: npm install
-# Start Command: npm start
-# Environment Variables: NODE_ENV=production
-# Free plan: 512MB RAM, shared CPU, spins down after 15min inactivity (first request is slow)
-
 services:
   - type: web
     name: blindfold-tower-v2
     env: node
-    plan: free
     buildCommand: npm install
     startCommand: npm start
+    plan: free
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 3000
-    healthCheckPath: /
-    # WebSocket connections are supported on Render free tier
-    # Auto-deploys from main branch on push
